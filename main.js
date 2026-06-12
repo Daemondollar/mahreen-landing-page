@@ -9,9 +9,9 @@
   /* ------------------------------------------
      1. NAVBAR — scroll-based styling & toggle
   ------------------------------------------ */
-  const navbar   = document.getElementById('navbar');
+  const navbar = document.getElementById('navbar');
   const navToggle = document.getElementById('navToggle');
-  const navMenu   = document.getElementById('navMenu');
+  const navMenu = document.getElementById('navMenu');
 
   // Scroll-based class
   const handleScroll = () => {
@@ -61,17 +61,17 @@
   /* ------------------------------------------
      3. COUNTDOWN TIMER
   ------------------------------------------ */
-  const deadline = new Date('2025-08-31T23:59:59+07:00').getTime();
+  const deadline = new Date('2026-07-14T23:59:59+07:00').getTime();
 
-  const cdDays  = document.getElementById('cd-days');
+  const cdDays = document.getElementById('cd-days');
   const cdHours = document.getElementById('cd-hours');
-  const cdMins  = document.getElementById('cd-mins');
-  const cdSecs  = document.getElementById('cd-secs');
+  const cdMins = document.getElementById('cd-mins');
+  const cdSecs = document.getElementById('cd-secs');
 
   const pad = n => String(Math.max(0, n)).padStart(2, '0');
 
   const updateCountdown = () => {
-    const now  = Date.now();
+    const now = Date.now();
     const diff = deadline - now;
 
     if (diff <= 0) {
@@ -80,15 +80,15 @@
     }
 
     const totalSecs = Math.floor(diff / 1000);
-    const days  = Math.floor(totalSecs / 86400);
+    const days = Math.floor(totalSecs / 86400);
     const hours = Math.floor((totalSecs % 86400) / 3600);
-    const mins  = Math.floor((totalSecs % 3600) / 60);
-    const secs  = totalSecs % 60;
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
 
-    cdDays.textContent  = pad(days);
+    cdDays.textContent = pad(days);
     cdHours.textContent = pad(hours);
-    cdMins.textContent  = pad(mins);
-    cdSecs.textContent  = pad(secs);
+    cdMins.textContent = pad(mins);
+    cdSecs.textContent = pad(secs);
   };
 
   updateCountdown();
@@ -99,8 +99,8 @@
   ------------------------------------------ */
   const stats = [
     { el: document.getElementById('stat1'), target: 10000, suffix: 'K+', divisor: 1000 },
-    { el: document.getElementById('stat2'), target: 34,    suffix: '',   divisor: 1    },
-    { el: document.getElementById('stat3'), target: 500,   suffix: '+',  divisor: 1    },
+    { el: document.getElementById('stat2'), target: 34, suffix: '', divisor: 1 },
+    { el: document.getElementById('stat3'), target: 500, suffix: '+', divisor: 1 },
   ];
 
   const formatStat = (val, divisor, suffix) => {
@@ -183,6 +183,252 @@
         });
       }
     });
+  });
+
+  /* ------------------------------------------
+     7. HERO VIDEO — autoplay fallback
+     If browser blocks autoplay, the poster image
+     (hero-bg.jpg) will show automatically.
+  ------------------------------------------ */
+  const heroVideo = document.getElementById('hero-video');
+  if (heroVideo) {
+    heroVideo.addEventListener('error', () => {
+      // Video failed to load — poster image is already visible as fallback
+      heroVideo.style.display = 'none';
+    });
+  }
+
+  /* ------------------------------------------
+     8. MODAL SYSTEM
+     - #kontak-modal  → "Hubungi Kami" dialog
+     - #daftar-modal  → Registration confirmation
+  ------------------------------------------ */
+
+  /**
+   * Opens a modal overlay by ID.
+   * @param {string} modalId
+   */
+  function openModal(modalId) {
+    const overlay = document.getElementById(modalId);
+    if (!overlay) return;
+
+    // Prevent background scroll
+    document.body.style.overflow = 'hidden';
+
+    overlay.classList.add('modal-open');
+    overlay.focus();
+
+    // Trap focus inside modal
+    trapFocus(overlay);
+  }
+
+  /**
+   * Closes a modal overlay by ID.
+   * @param {string} modalId
+   */
+  function closeModal(modalId) {
+    const overlay = document.getElementById(modalId);
+    if (!overlay) return;
+
+    overlay.classList.remove('modal-open');
+
+    // Restore background scroll only if no other modals are open
+    const anyOpen = document.querySelector('.modal-overlay.modal-open');
+    if (!anyOpen) {
+      document.body.style.overflow = '';
+    }
+  }
+
+  /**
+   * Basic focus trap so Tab key stays within the modal.
+   * @param {HTMLElement} overlay
+   */
+  function trapFocus(overlay) {
+    const focusable = overlay.querySelectorAll(
+      'a[href], button:not([disabled]), input, textarea, select, [tabindex]:not([tabindex="-1"])'
+    );
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    overlay.addEventListener('keydown', function onKey(e) {
+      if (e.key === 'Tab') {
+        if (e.shiftKey) {
+          if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+        } else {
+          if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+      }
+      // Remove listener when modal closes
+      if (!overlay.classList.contains('modal-open')) {
+        overlay.removeEventListener('keydown', onKey);
+      }
+    });
+
+    // Focus first element
+    setTimeout(() => first.focus(), 50);
+  }
+
+  // ------- Hubungi Kami modal -------
+  const kontakBtn = document.getElementById('kontak-btn');
+  const kontakClose = document.getElementById('kontak-close');
+  const kontakModal = document.getElementById('kontak-modal');
+
+  if (kontakBtn) {
+    kontakBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      openModal('kontak-modal');
+    });
+  }
+  if (kontakClose) {
+    kontakClose.addEventListener('click', () => closeModal('kontak-modal'));
+  }
+
+  // ------- Daftar Sekarang modal (two-state: form → success) -------
+  const daftarBtn     = document.getElementById('daftar-btn');
+  const daftarClose   = document.getElementById('daftar-close');
+  const confirmOkBtn  = document.getElementById('confirm-ok-btn');
+  const daftarForm    = document.getElementById('daftar-form');
+  const emailInput    = document.getElementById('daftar-email');
+  const emailError    = document.getElementById('email-error');
+  const emailGroup    = document.getElementById('email-group');
+  const stateForm     = document.getElementById('daftar-state-form');
+  const stateSuccess  = document.getElementById('daftar-state-success');
+  const confirmEmail  = document.getElementById('confirm-email-display');
+
+  /** Validate email format — returns true if valid */
+  function isValidEmail(val) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val.trim());
+  }
+
+  /** Show an error on the email field */
+  function showEmailError(msg) {
+    emailError.textContent = msg;
+    emailInput.classList.add('input-error');
+    emailInput.classList.remove('input-success');
+    emailInput.setAttribute('aria-invalid', 'true');
+  }
+
+  /** Clear error state from the email field */
+  function clearEmailError() {
+    emailError.textContent = '';
+    emailInput.classList.remove('input-error');
+    emailInput.setAttribute('aria-invalid', 'false');
+  }
+
+  /** Transition from form state to success state */
+  function showSuccessState(email) {
+    // Show submitted email in the success panel
+    if (confirmEmail) confirmEmail.textContent = email;
+
+    // Swap visibility
+    stateForm.classList.add('daftar-state--hidden');
+    stateSuccess.classList.remove('daftar-state--hidden');
+    stateSuccess.classList.add('daftar-state--fade-in');
+
+    // Re-focus first element in success panel
+    setTimeout(() => {
+      const firstBtn = stateSuccess.querySelector('button');
+      if (firstBtn) firstBtn.focus();
+    }, 50);
+  }
+
+  /** Reset modal back to form state (called on close) */
+  function resetDaftarModal() {
+    if (!stateForm || !stateSuccess) return;
+    stateSuccess.classList.add('daftar-state--hidden');
+    stateSuccess.classList.remove('daftar-state--fade-in');
+    stateForm.classList.remove('daftar-state--hidden');
+    if (daftarForm) daftarForm.reset();
+    clearEmailError();
+    emailInput.classList.remove('input-success');
+  }
+
+  // Open modal
+  if (daftarBtn) {
+    daftarBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      resetDaftarModal();
+      openModal('daftar-modal');
+    });
+  }
+
+  // Close button
+  if (daftarClose) {
+    daftarClose.addEventListener('click', () => {
+      closeModal('daftar-modal');
+      setTimeout(resetDaftarModal, 400); // wait for close animation
+    });
+  }
+
+  // "Siap Berkarya" button in success state
+  if (confirmOkBtn) {
+    confirmOkBtn.addEventListener('click', () => {
+      closeModal('daftar-modal');
+      setTimeout(resetDaftarModal, 400);
+    });
+  }
+
+  // Form submit — validate then transition
+  if (daftarForm) {
+    // Clear error on typing
+    if (emailInput) {
+      emailInput.addEventListener('input', () => {
+        if (emailInput.value.trim()) {
+          clearEmailError();
+          if (isValidEmail(emailInput.value)) {
+            emailInput.classList.add('input-success');
+          } else {
+            emailInput.classList.remove('input-success');
+          }
+        }
+      });
+    }
+
+    daftarForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const val = emailInput ? emailInput.value.trim() : '';
+
+      if (!val) {
+        showEmailError('⚠ Email tidak boleh kosong.');
+        emailInput.focus();
+        return;
+      }
+      if (!isValidEmail(val)) {
+        showEmailError('⚠ Format email tidak valid. Contoh: nama@email.com');
+        emailInput.focus();
+        return;
+      }
+
+      // All good — transition to success
+      clearEmailError();
+      showSuccessState(val);
+    });
+  }
+
+  // ------- Close modals on overlay click (outside panel) -------
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        closeModal(overlay.id);
+        // Reset daftar modal form if it was the one closed
+        if (overlay.id === 'daftar-modal') {
+          setTimeout(resetDaftarModal, 400);
+        }
+      }
+    });
+  });
+
+  // ------- Close modals on Escape key -------
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-overlay.modal-open').forEach(overlay => {
+        closeModal(overlay.id);
+        if (overlay.id === 'daftar-modal') {
+          setTimeout(resetDaftarModal, 400);
+        }
+      });
+    }
   });
 
 })();

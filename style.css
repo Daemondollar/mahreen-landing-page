@@ -257,11 +257,69 @@ a { color: inherit; text-decoration: none; }
   overflow: hidden;
 }
 
+/* ============================================
+   HERO VIDEO / IMAGE BACKGROUND
+   ============================================ */
+.hero-video-wrapper {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* The <video> element — fills the wrapper vertically (cover) */
+.hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;   /* fill & crop — never letterbox */
+  object-position: center center;
+  opacity: 0.35;       /* lower opacity so text stays readable */
+  pointer-events: none;
+}
+
+/* Fallback image shown when video has no src or won't autoplay */
+.hero-video-img {
+  position: absolute;
+  inset: 0;
+  background-image: url('hero-bg.jpg');
+  background-size: cover;
+  background-position: center center;
+  opacity: 0.35;
+  z-index: -1; /* behind video; visible only when video is transparent/empty */
+}
+
+/* When video is actually playing, boost its z-index above the img */
+.hero-video:not([src=""]) ~ .hero-video-img,
+.hero-video[src]:not([src=""]) ~ .hero-video-img {
+  opacity: 0;
+}
+
+/* Dark gradient overlay — top + bottom fade for readability */
+.hero-video-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom,
+      rgba(5, 6, 15, 0.55) 0%,
+      rgba(5, 6, 15, 0.25) 40%,
+      rgba(5, 6, 15, 0.25) 60%,
+      rgba(5, 6, 15, 0.75) 100%
+    );
+  z-index: 1;
+}
+
+/* ============================================
+   HERO SECTION — remaining
+   ============================================ */
+
 /* Animated background blobs */
 .hero-bg {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  z-index: 1;
 }
 
 .hero-blob {
@@ -316,7 +374,7 @@ a { color: inherit; text-decoration: none; }
 
 .hero-content {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   text-align: center;
   max-width: 820px;
   margin: 0 auto;
@@ -430,6 +488,7 @@ a { color: inherit; text-decoration: none; }
   bottom: 32px;
   left: 50%;
   transform: translateX(-50%);
+  z-index: 2;
 }
 .scroll-indicator {
   width: 28px; height: 44px;
@@ -826,6 +885,436 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ============================================
+   MODAL OVERLAY (shared)
+   ============================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(5, 6, 15, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.35s ease, visibility 0.35s ease;
+  overflow-y: auto;
+}
+.modal-overlay.modal-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Modal panel base */
+.modal-panel {
+  position: relative;
+  background: linear-gradient(160deg, #0f1128 0%, #0a0c1e 100%);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-xl);
+  padding: 48px 40px;
+  width: 100%;
+  max-width: 640px;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06);
+  transform: translateY(24px) scale(0.97);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-overlay.modal-open .modal-panel {
+  transform: translateY(0) scale(1);
+}
+
+/* Modal close button */
+.modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--clr-text-muted);
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.modal-close:hover {
+  background: rgba(255,255,255,0.14);
+  color: var(--clr-white);
+  transform: rotate(90deg);
+}
+
+/* Modal header icon */
+.modal-icon-header {
+  width: 72px; height: 72px;
+  background: rgba(79, 110, 247, 0.12);
+  border: 1px solid rgba(79, 110, 247, 0.25);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto 24px;
+}
+.modal-emoji { line-height: 1; }
+
+.modal-title {
+  font-size: 1.625rem;
+  font-weight: 800;
+  color: var(--clr-white);
+  letter-spacing: -0.5px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+.modal-desc {
+  font-size: 0.9375rem;
+  color: var(--clr-text-muted);
+  text-align: center;
+  line-height: 1.7;
+  margin-bottom: 32px;
+}
+
+/* ============================================
+   MODAL — CONTACT (Hubungi Kami)
+   ============================================ */
+.modal-contact {
+  max-width: 600px;
+}
+
+.contact-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.contact-card {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: 20px;
+  padding: 24px;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+  transition: var(--transition);
+}
+
+.contact-card--wa {
+  border-color: rgba(37, 211, 102, 0.2);
+}
+.contact-card--wa:hover {
+  border-color: rgba(37, 211, 102, 0.4);
+  box-shadow: 0 8px 32px rgba(37, 211, 102, 0.08);
+}
+
+.contact-card--gmail {
+  border-color: rgba(234, 67, 53, 0.2);
+}
+.contact-card--gmail:hover {
+  border-color: rgba(234, 67, 53, 0.4);
+  box-shadow: 0 8px 32px rgba(234, 67, 53, 0.08);
+  transform: translateY(-2px);
+}
+
+.contact-card-icon {
+  width: 56px; height: 56px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.contact-card--wa .contact-card-icon {
+  background: rgba(37, 211, 102, 0.12);
+  color: #25d366;
+}
+.contact-card--gmail .contact-card-icon {
+  background: rgba(234, 67, 53, 0.12);
+  color: #ea4335;
+}
+
+.contact-card-body { flex: 1; min-width: 0; }
+.contact-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--clr-white);
+  margin-bottom: 4px;
+}
+.contact-card-desc {
+  font-size: 0.8125rem;
+  color: var(--clr-text-muted);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+.contact-card-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  color: var(--clr-text-muted);
+}
+.contact-card--gmail .contact-card-info {
+  color: var(--clr-accent);
+  font-weight: 500;
+}
+
+/* WhatsApp: disabled state */
+.btn-contact-disabled {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 18px;
+  border-radius: var(--radius-full);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--clr-text-muted);
+  white-space: nowrap;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Gmail: active button */
+.btn-contact-gmail {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-full);
+  font-size: 0.875rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ea4335, #fbbc05);
+  color: var(--clr-white);
+  white-space: nowrap;
+  transition: var(--transition);
+  box-shadow: 0 4px 16px rgba(234, 67, 53, 0.35);
+  text-decoration: none;
+}
+.btn-contact-gmail:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(234, 67, 53, 0.5);
+}
+
+/* ============================================
+   MODAL — CONFIRM (Daftar Sekarang)
+   ============================================ */
+.modal-confirm {
+  max-width: 520px;
+  text-align: center;
+}
+
+/* Animated success ring */
+.confirm-success-ring {
+  width: 100px; height: 100px;
+  margin: 0 auto 28px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.confirm-success-ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(var(--clr-accent) 0%, transparent 100%);
+  animation: spinRing 2s linear infinite;
+  opacity: 0.4;
+}
+@keyframes spinRing {
+  to { transform: rotate(360deg); }
+}
+.confirm-success-icon {
+  width: 80px; height: 80px;
+  background: linear-gradient(135deg, rgba(6, 214, 160, 0.2), rgba(79, 110, 247, 0.2));
+  border: 2px solid var(--clr-accent);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--clr-accent);
+  position: relative;
+  z-index: 1;
+  animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes popIn {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.confirm-title { margin-bottom: 12px; }
+.confirm-desc {
+  margin-bottom: 32px;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.confirm-desc strong { color: var(--clr-white); }
+
+/* Steps inside confirm modal */
+.confirm-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 36px;
+  text-align: left;
+}
+.confirm-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px 20px;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-md);
+}
+.confirm-step-num {
+  flex-shrink: 0;
+  width: 32px; height: 32px;
+  background: var(--gradient-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: var(--clr-white);
+}
+.confirm-step strong {
+  display: block;
+  font-size: 0.9375rem;
+  color: var(--clr-white);
+  margin-bottom: 4px;
+}
+.confirm-step p {
+  font-size: 0.8125rem;
+  color: var(--clr-text-muted);
+  line-height: 1.5;
+}
+
+.confirm-close-btn {
+  width: 100%;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+/* ============================================
+   DAFTAR MODAL — Two-State Form
+   ============================================ */
+.daftar-state {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.daftar-state--hidden {
+  display: none;
+}
+.daftar-state--fade-in {
+  animation: stateFadeIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes stateFadeIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Form group */
+.daftar-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.form-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--clr-text);
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid var(--clr-border);
+  border-radius: var(--radius-md);
+  color: var(--clr-white);
+  font-family: var(--font);
+  font-size: 1rem;
+  transition: var(--transition);
+  outline: none;
+}
+.form-input::placeholder {
+  color: var(--clr-text-muted);
+  opacity: 0.6;
+}
+.form-input:focus {
+  border-color: var(--clr-primary);
+  background: rgba(79, 110, 247, 0.07);
+  box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.15);
+}
+.form-input.input-error {
+  border-color: #f87171;
+  background: rgba(248, 113, 113, 0.07);
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.12);
+}
+.form-input.input-success {
+  border-color: var(--clr-accent);
+  background: rgba(6, 214, 160, 0.07);
+}
+
+.form-error {
+  font-size: 0.8125rem;
+  color: #f87171;
+  font-weight: 500;
+  min-height: 1.2em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.form-error:empty { display: none; }
+
+.form-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  color: var(--clr-text-muted);
+}
+
+.daftar-submit-btn {
+  width: 100%;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+/* Email display in success state */
+.confirm-email-display {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 12px;
+  background: rgba(6, 214, 160, 0.12);
+  border: 1px solid rgba(6, 214, 160, 0.3);
+  border-radius: var(--radius-full);
+  color: var(--clr-accent);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* ============================================
    RESPONSIVE — Tablet
    ============================================ */
 @media (max-width: 900px) {
@@ -840,6 +1329,13 @@ a { color: inherit; text-decoration: none; }
   }
   .cta-card {
     padding: 56px 36px;
+  }
+  .contact-card {
+    grid-template-columns: 56px 1fr;
+    grid-template-rows: auto auto;
+  }
+  .contact-card-action {
+    grid-column: 2;
   }
 }
 
@@ -898,6 +1394,20 @@ a { color: inherit; text-decoration: none; }
 
   .how-it-works { padding: 32px 20px; }
   .hero-scroll { display: none; }
+
+  /* Modal mobile */
+  .modal-panel {
+    padding: 32px 20px;
+    border-radius: var(--radius-lg);
+    max-height: 95vh;
+  }
+  .contact-card {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .contact-card-icon { margin: 0 auto; }
+  .contact-card-info { justify-content: center; }
+  .contact-card-action { display: flex; justify-content: center; }
 }
 
 @media (max-width: 400px) {
